@@ -1,68 +1,242 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
   margin: 0;
+  padding: 0;
+}
+
+/* General styles */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #121212;
+  color: #ffffff;
+  margin: 0;
+  padding: 0;
+}
+
+.App {
   display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+/* Header styles */
+.header {
+  display: flex;
+  flex-direction: row; /* Align items in a row */
+  justify-content: center;
+  align-items: center;
+  gap: 1rem; /* Add one rem space between question and select */
+  padding: 1rem;
+  background-color: transparent; /* Removed background */
+  border-bottom: none; /* Removed bottom border */
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+.header h1 {
+  font-size: 1rem; /* Match the font size of the select */
+  margin: 0; /* Removed margin */
+}
+
+/* Styled the select dropdown to look like regular text */
+.city-selector {
+  padding: 0;
+  font-size: 1rem; /* Ensure consistency with the question */
+  border: none;
+  border-radius: 0;
+  outline: none;
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  background-color: transparent; /* Transparent background */
+  color: gray; /* Gray text color */
+  appearance: none; /* Remove default dropdown arrow */
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right;
+  background-size: 1rem;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+/* Remove border and white background from the options */
+.city-selector option {
+  background-color: transparent; /* Transparent background */
+  border: none; /* Remove border */
+  color: gray; /* Ensure text color is gray */
+}
+
+/* Main content styles */
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.leaflet-container {
+  height: 80%;
+  width: 90%;
+  margin: 1rem auto;
+  border: 1px solid #333;
+  border-radius: 8px;
+}
+
+.event-item {
+  cursor: pointer;
+  padding: 0.5rem;
+  border: 1px solid #333;
+  border-radius: 4px;
+  margin: 0.5rem 0;
+  background-color: #1e1e1e;
+  transition: background-color 0.3s;
+}
+
+.event-item:hover {
+  background-color: #333;
+}
+
+.event-list {
+  margin: 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.event-list h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Centering the container */
+.centered-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  text-align: center;
+}
+
+/* Custom styles for the CustomSelect component */
+.custom-select {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.selected-option {
+  padding: 0.5rem;
+  font-size: 1rem;
+  color: gray;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+/* Adjust options height to fit above the fold for Windows 8 and enable scrolling */
+.options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: #121212;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  max-height: 50vh; /* Limit height to fit above the fold for Windows 8 */
+  overflow-y: auto; /* Enable vertical scrolling */
+  z-index: 1000;
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
+}
+
+.options::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for WebKit browsers */
+}
+
+.option {
+  padding: 0.5rem;
+  font-size: 1rem;
+  color: gray;
+  background-color: transparent;
+  border-bottom: 1px solid #333;
+}
+
+.option:hover {
+  background-color: #333;
+  color: white;
+}
+
+.option:last-child {
+  border-bottom: none;
+}
+
+/* Full-screen styling for the second screen */
+.full-screen {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #121212;
+}
+
+/* Style for the close button */
+.close-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  color: #fff;
+  background-color: #ff4d4d;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.close-button:hover {
+  background-color: #e60000;
+}
+
+/* Styles for the EventDetails screen */
+.event-details-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  height: 100vh;
+  width: 100vw;
+  background-color: #121212;
+  color: #ffffff;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.event-header {
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.event-image {
+  width: 100%;
+  height: 60vh; /* 60% of the screen height */
+  object-fit: cover;
+  margin-bottom: 1rem;
+}
+
+.event-description {
+  font-size: 1rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.event-description a {
+  color: #1e90ff;
+  text-decoration: none;
+}
+
+.event-description a:hover {
+  text-decoration: underline;
 }
