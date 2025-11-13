@@ -33,6 +33,7 @@ export default function MapView({
   const mapInstanceRef = useRef(null);
   const mapContainerRef = useRef(null);
   const markersRef = useRef([]);
+  const listItemRefs = useRef(new Map());
   const [activeEventId, setActiveEventId] = useState(
     events.length ? events[0].id : null
   );
@@ -133,9 +134,14 @@ export default function MapView({
         })
         .on("mouseover", () => {
           setHoverEventId(event.id);
-          centerOnEvent(event.id);
         })
         .on("mouseout", () => {
+          setHoverEventId(null);
+        })
+        .on("tooltipopen", () => {
+          setHoverEventId(event.id);
+        })
+        .on("tooltipclose", () => {
           setHoverEventId(null);
         });
 
@@ -172,6 +178,18 @@ export default function MapView({
       }
     });
   }, [activeEventId, hoverEventId]);
+
+  useEffect(() => {
+    if (!hoverEventId) return;
+    const node = listItemRefs.current.get(hoverEventId);
+    if (node) {
+      node.scrollIntoView({
+        block: "nearest",
+        inline: "nearest",
+        behavior: "smooth",
+      });
+    }
+  }, [hoverEventId]);
 
   const handleSelectEvent = (eventId) => {
     setActiveEventId(eventId);
@@ -263,19 +281,43 @@ export default function MapView({
               className={`list-row ${
                 event.id === activeEventId ? "active" : ""
               } ${event.id === hoverEventId ? "hovered" : ""}`}
+              ref={(node) => {
+                if (node) {
+                  listItemRefs.current.set(event.id, node);
+                } else {
+                  listItemRefs.current.delete(event.id);
+                }
+              }}
+              >
+              <div
+                className="event-row"
+                onMouseEnter={() => setHoverEventId(event.id)}
+                onMouseLeave={() => setHoverEventId(null)}
               >
                 <button
                   type="button"
-                  onClick={() => handleSelectEvent(event.id)}
-                onMouseEnter={() => {
-                  setHoverEventId(event.id);
-                  centerOnEvent(event.id);
-                }}
-                onMouseLeave={() => setHoverEventId(null)}
+                  className="icon-button target"
+                  aria-label={`Center on ${event.name}`}
+                  onClick={(clickEvent) => {
+                    clickEvent.stopPropagation();
+                    centerOnEvent(event.id);
+                  }}
                 >
+                  ⦿
+                </button>
+                <div className="event-text">
                   <span className="event-name">{event.name}</span>
                   <span className="event-venue">{event.venueName}</span>
+                </div>
+                <button
+                  type="button"
+                  className="icon-button open"
+                  aria-label={`Open ${event.name}`}
+                  onClick={() => handleSelectEvent(event.id)}
+                >
+                  ↗
                 </button>
+              </div>
               </li>
             ))}
           </ul>
