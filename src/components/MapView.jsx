@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -13,6 +13,14 @@ const formatDate = (isoDate) => {
 
   return formatter.format(new Date(isoDate));
 };
+
+const escapeHtml = (value = "") =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 
 export default function MapView({
   city,
@@ -29,6 +37,19 @@ export default function MapView({
     events.length ? events[0].id : null
   );
   const [hoverEventId, setHoverEventId] = useState(null);
+
+  const centerOnEvent = useCallback(
+    (eventId) => {
+      const event = events.find((item) => item.id === eventId);
+      if (event?.latitude && event?.longitude && mapInstanceRef.current) {
+        mapInstanceRef.current.setView([event.latitude, event.longitude], 12, {
+          animate: true,
+          duration: 0.4,
+        });
+      }
+    },
+    [events]
+  );
 
   const primaryEvent = useMemo(() => {
     if (!events.length) return null;
@@ -94,13 +115,15 @@ export default function MapView({
 
       marker
         .bindTooltip(
-          `<strong>${event.name}</strong><br/>${event.venueName}${
-            event.date ? `<br/>${formatDate(event.date)}` : ""
-          }`,
+          event.image
+            ? `<div class="event-tooltip-image-only"><img src="${escapeHtml(
+                event.image
+              )}" alt="${escapeHtml(event.name)}" /></div>`
+            : "",
           {
             direction: "top",
             offset: [0, -8],
-            opacity: 0.9,
+            opacity: 1,
             className: "event-tooltip",
           }
         )
@@ -110,6 +133,7 @@ export default function MapView({
         })
         .on("mouseover", () => {
           setHoverEventId(event.id);
+          centerOnEvent(event.id);
         })
         .on("mouseout", () => {
           setHoverEventId(null);
@@ -117,7 +141,7 @@ export default function MapView({
 
       markersRef.current.push({ id: event.id, marker });
     });
-  }, [events, activeEventId, onEventClick]);
+  }, [events, activeEventId, centerOnEvent, onEventClick]);
 
   useEffect(() => {
     if (!primaryEvent || !mapInstanceRef.current) return;
@@ -152,6 +176,7 @@ export default function MapView({
   const handleSelectEvent = (eventId) => {
     setActiveEventId(eventId);
     onEventClick(eventId);
+    centerOnEvent(eventId);
   };
 
   return (
@@ -207,7 +232,10 @@ export default function MapView({
                 <button
                   type="button"
                   onClick={() => handleSelectEvent(event.id)}
-                onMouseEnter={() => setHoverEventId(event.id)}
+                onMouseEnter={() => {
+                  setHoverEventId(event.id);
+                  centerOnEvent(event.id);
+                }}
                 onMouseLeave={() => setHoverEventId(null)}
                 >
                   <span className="event-name">{event.name}</span>

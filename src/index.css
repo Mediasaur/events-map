@@ -158,14 +158,26 @@ body {
 }
 
 .event-tooltip {
-  background: var(--color-surface);
-  color: var(--color-text-primary);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 8px 12px;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
-  font-size: 12px;
-  letter-spacing: 0.02em;
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.event-tooltip-image-only {
+  width: 96px;
+  height: 140px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+  background: #000;
+}
+
+.event-tooltip-image-only img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .event-listing {

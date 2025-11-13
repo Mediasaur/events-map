@@ -12,7 +12,7 @@ const formatDate = (isoDate) => {
   return formatter.format(new Date(isoDate));
 };
 
-function EventDetails({ event, onBack, onClose }) {
+function EventDetails({ event, onBack }) {
   return (
     <div className="detail-screen">
       <header className="screen-header">
@@ -26,9 +26,6 @@ function EventDetails({ event, onBack, onClose }) {
           <span className="separator">|</span>
           <span>{event.name}</span>
         </div>
-        <button type="button" className="ghost-button" onClick={onClose}>
-          Close
-        </button>
       </header>
 
       <section className="detail-media">

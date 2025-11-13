@@ -108,7 +108,6 @@ function App() {
         <EventDetails
           event={selectedEvent}
           onBack={() => setSelectedEventId(null)}
-          onClose={handleReset}
         />
       ) : (
         <MapView
