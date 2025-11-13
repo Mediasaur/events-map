@@ -1,49 +1,65 @@
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import MapView from "./components/MapView";
 import EventDetails from "./components/EventDetails";
 import CustomSelect from "./components/CustomSelect";
+import { getCities, getEventsForCity } from "./data/events";
 import "./index.css";
 
 function App() {
   const [selectedCity, setSelectedCity] = useState("");
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedEventId, setSelectedEventId] = useState(null);
 
-  const cities = [
-    "Austin",
-    "San Francisco",
-    "Chicago",
-    "Miami",
-    "New York",
-    "Seattle",
-    "Denver",
-    "Las Vegas",
-    "Boston",
-    "Nashville",
-    "Portland",
-    "Dallas",
-    "Philadelphia",
-    "Los Angeles",
-    "Phoenix",
-  ];
+  const cities = useMemo(() => getCities(), []);
+  const eventsForCity = useMemo(
+    () => (selectedCity ? getEventsForCity(selectedCity) : []),
+    [selectedCity]
+  );
+
+  const selectedEvent =
+    selectedEventId && eventsForCity.length
+      ? eventsForCity.find((event) => event.id === selectedEventId) ?? null
+      : null;
+
+  const handleReset = () => {
+    setSelectedCity("");
+    setSelectedEventId(null);
+  };
+
+  const handleEventClick = useCallback((eventId) => {
+    setSelectedEventId(eventId);
+  }, []);
 
   return (
-    <div className="App">
+    <div className="app-shell">
       {!selectedCity ? (
-        <div className="centered-container">
-          <header className="header">
-            <h1>What city are you in?</h1>
-            <CustomSelect options={cities} onChange={setSelectedCity} />
-          </header>
+        <div className="landing-screen">
+          <div className="prompt-row">
+            <span className="prompt-label">What city are you in?</span>
+            <span className="prompt-separator" aria-hidden="true" />
+            <CustomSelect
+              options={cities}
+              value={selectedCity}
+              placeholder="Select"
+              onChange={(city) => {
+                setSelectedCity(city);
+                setSelectedEventId(null);
+              }}
+            />
+          </div>
         </div>
       ) : selectedEvent ? (
-        <div className="full-screen">
-          <EventDetails event={selectedEvent} onBack={() => setSelectedEvent(null)} />
-        </div>
+        <EventDetails
+          event={selectedEvent}
+          onBack={() => setSelectedEventId(null)}
+          onClose={handleReset}
+        />
       ) : (
-        <div className="full-screen">
-          <button className="close-button" onClick={() => setSelectedCity("")}>Close</button>
-          <MapView city={selectedCity} onEventClick={setSelectedEvent} />
-        </div>
+        <MapView
+          city={selectedCity}
+          events={eventsForCity}
+          onEventClick={handleEventClick}
+          onClose={handleReset}
+        />
       )}
     </div>
   );
