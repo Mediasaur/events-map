@@ -200,6 +200,41 @@ export default function MapView({
 
       <section className="map-panel">
         <div ref={mapContainerRef} className="map-container" />
+        <div className="map-controls" aria-hidden="false">
+          <button
+            type="button"
+            className="map-button"
+            onClick={() => mapInstanceRef.current?.zoomIn()}
+            aria-label="Zoom in"
+          >
+            +
+          </button>
+          <button
+            type="button"
+            className="map-button"
+            onClick={() => mapInstanceRef.current?.zoomOut()}
+            aria-label="Zoom out"
+          >
+            –
+          </button>
+          <button
+            type="button"
+            className="map-button"
+            onClick={() =>
+              primaryEvent?.latitude &&
+              primaryEvent?.longitude &&
+              mapInstanceRef.current?.setView(
+                [primaryEvent.latitude, primaryEvent.longitude],
+                12,
+                { animate: true }
+              )
+            }
+            aria-label="Center on active event"
+            disabled={!primaryEvent}
+          >
+            ∘
+          </button>
+        </div>
 
         {primaryEvent?.image && (
           <div className="map-overlay">
