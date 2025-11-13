@@ -14,18 +14,26 @@ const formatDate = (isoDate) => {
   return formatter.format(new Date(isoDate));
 };
 
-export default function MapView({ city, events, onEventClick, onClose }) {
+export default function MapView({
+  city,
+  events,
+  isLoading,
+  error,
+  onEventClick,
+  onClose,
+}) {
   const mapInstanceRef = useRef(null);
   const mapContainerRef = useRef(null);
   const markersRef = useRef([]);
   const [activeEventId, setActiveEventId] = useState(
     events.length ? events[0].id : null
   );
+  const [hoverEventId, setHoverEventId] = useState(null);
 
-  const primaryEvent = useMemo(
-    () => events.find((event) => event.id === activeEventId) ?? events[0],
-    [events, activeEventId]
-  );
+  const primaryEvent = useMemo(() => {
+    if (!events.length) return null;
+    return events.find((event) => event.id === activeEventId) ?? events[0];
+  }, [events, activeEventId]);
 
   useEffect(() => {
     setActiveEventId(events.length ? events[0].id : null);
@@ -60,7 +68,7 @@ export default function MapView({ city, events, onEventClick, onClose }) {
 
     if (!map) return;
 
-    markersRef.current.forEach((marker) => marker.remove());
+    markersRef.current.forEach(({ marker }) => marker.remove());
     markersRef.current = [];
 
     if (!events.length) {
@@ -82,14 +90,32 @@ export default function MapView({ city, events, onEventClick, onClose }) {
         weight: 2,
         fillColor: "#c4ff00",
         fillOpacity: event.id === activeEventId ? 1 : 0.6,
-      })
-        .addTo(map)
+      }).addTo(map);
+
+      marker
+        .bindTooltip(
+          `<strong>${event.name}</strong><br/>${event.venueName}${
+            event.date ? `<br/>${formatDate(event.date)}` : ""
+          }`,
+          {
+            direction: "top",
+            offset: [0, -8],
+            opacity: 0.9,
+            className: "event-tooltip",
+          }
+        )
         .on("click", () => {
           setActiveEventId(event.id);
           onEventClick(event.id);
+        })
+        .on("mouseover", () => {
+          setHoverEventId(event.id);
+        })
+        .on("mouseout", () => {
+          setHoverEventId(null);
         });
 
-      markersRef.current.push(marker);
+      markersRef.current.push({ id: event.id, marker });
     });
   }, [events, activeEventId, onEventClick]);
 
@@ -103,6 +129,25 @@ export default function MapView({ city, events, onEventClick, onClose }) {
       });
     }
   }, [primaryEvent]);
+
+  useEffect(() => {
+    markersRef.current.forEach(({ id, marker }) => {
+      const isActive = id === activeEventId;
+      const isHovered = id === hoverEventId;
+
+      marker.setStyle({
+        fillOpacity: isActive || isHovered ? 1 : 0.6,
+        color: isActive ? "#c4ff00" : isHovered ? "#ffffff" : "#c4ff00",
+        weight: isActive || isHovered ? 3 : 2,
+      });
+
+      if (isHovered) {
+        marker.openTooltip();
+      } else {
+        marker.closeTooltip();
+      }
+    });
+  }, [activeEventId, hoverEventId]);
 
   const handleSelectEvent = (eventId) => {
     setActiveEventId(eventId);
@@ -118,7 +163,13 @@ export default function MapView({ city, events, onEventClick, onClose }) {
         <div className="screen-title">
           <span>{city}</span>
           <span className="separator">|</span>
-          <span>{formatDate(primaryEvent?.date)}</span>
+          <span>
+            {isLoading
+              ? "Loading…"
+              : primaryEvent?.date
+              ? formatDate(primaryEvent.date)
+              : "No events"}
+          </span>
         </div>
       </header>
 
@@ -130,25 +181,42 @@ export default function MapView({ city, events, onEventClick, onClose }) {
             <img src={primaryEvent.image} alt={primaryEvent.name} />
           </div>
         )}
+
+        {!isLoading && !error && !events.length && (
+          <div className="map-empty-state">
+            <p>No events found for this city.</p>
+          </div>
+        )}
       </section>
 
       <section className="event-listing">
         <div className="list-header">Events</div>
-        <ul>
+        {error ? (
+          <div className="list-error">{error}</div>
+        ) : isLoading ? (
+          <div className="list-loading">Loading events…</div>
+        ) : (
+          <ul>
           {events.map((event) => (
-            <li
-              key={event.id}
+              <li
+                key={event.id}
               className={`list-row ${
                 event.id === activeEventId ? "active" : ""
-              }`}
-            >
-              <button type="button" onClick={() => handleSelectEvent(event.id)}>
-                <span className="event-name">{event.name}</span>
-                <span className="event-venue">{event.venueName}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
+              } ${event.id === hoverEventId ? "hovered" : ""}`}
+              >
+                <button
+                  type="button"
+                  onClick={() => handleSelectEvent(event.id)}
+                onMouseEnter={() => setHoverEventId(event.id)}
+                onMouseLeave={() => setHoverEventId(null)}
+                >
+                  <span className="event-name">{event.name}</span>
+                  <span className="event-venue">{event.venueName}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </div>
   );

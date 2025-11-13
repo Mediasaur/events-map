@@ -32,7 +32,13 @@ function EventDetails({ event, onBack, onClose }) {
       </header>
 
       <section className="detail-media">
-        <img src={event.image} alt={event.name} />
+        {event.image ? (
+          <img src={event.image} alt={event.name} />
+        ) : (
+          <div className="detail-media--placeholder">
+            <span>No image available</span>
+          </div>
+        )}
       </section>
 
       <section className="detail-info">
@@ -58,7 +64,7 @@ function EventDetails({ event, onBack, onClose }) {
 
       <section className="detail-description">
         <h2>Info</h2>
-        <p>{event.info}</p>
+        <p>{event.info || "More information coming soon."}</p>
         {event.link && (
           <a
             href={event.link}
